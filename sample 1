@@ -1,0 +1,103 @@
+import pygame
+
+pygame.init()
+
+#game setting
+MAP_WIDTH=800
+MAP_HEIGHT=800
+
+class Player(pygame.sprite.Sprite):
+    def __init__(self):
+        pygame.sprite.Sprite.__init__(self)
+        #image params
+        self.image=pygame.image.load("player1.png")
+        self.rect=self.image.get_rect()
+        #move vectors
+        self.position=pygame.math.Vector2(self.rect.center)
+        self.mov_force=pygame.math.Vector2((0,0))
+        self.force_accel=pygame.math.Vector2((0,0))
+        self.direction=0
+        #rotate sprite
+        self.rotate_by=0
+
+    def moveForward(self):
+        player1.force_accel=pygame.math.Vector2((0,-0.1))
+
+    def moveBackword(self):
+        player1.force_accel=pygame.math.Vector2((0,0.1))
+
+    def turnLeft(self):
+        player1.rotate_by-=25
+
+    def turnRight(self):
+        player1.rotate_by+=25
+
+    def update(self):
+        if self.position.x>MAP_WIDTH:
+            self.position.x=0
+        if self.position.x<0:
+            self.position.x=800
+        if self.position.y>MAP_HEIGHT:
+            self.position.y=0
+        if self.position.y<0:
+            self.position.y=800
+        #adjust image and rect
+        #pygame.transform.rotate(self.image,self.rotate_by)
+        #self.image=pygame.transform.scale(self.image,(25,25))
+        #update player direction angle
+        self.direction+=self.rotate_by
+        self.direction%=360
+        #adjust speed (increate of decrease)
+        self.force_accel.rotate_ip(self.direction)#rotate accel to be in the same with moving direction
+        self.mov_force.rotate_ip(self.rotate_by)
+        #update position
+        self.mov_force+=self.force_accel
+        self.position+=self.mov_force
+        self.rect.center=self.position
+        #reset
+        self.rotate_by=0
+        self.force_accel=pygame.math.Vector2((0,0))
+
+#initilizing window
+background=pygame.display.set_mode([MAP_WIDTH,MAP_HEIGHT])
+pygame.display.set_caption("vectors multiplications")
+
+#initlizing players sprites
+player1=Player()
+enemy1=Player()
+players=pygame.sprite.Group([player1])
+enemys=pygame.sprite.Group([enemy1])
+#set players positions
+player1.rect.center=(300,300)
+enemy1.rect.center=(400,400)
+
+#is game running
+is_running=True
+while(is_running):
+    for e in pygame.event.get():
+        keys=pygame.key.get_pressed()
+        if keys[pygame.K_ESCAPE]:
+            is_running=False
+        #scalling moving vector with force
+        if keys[pygame.K_UP]:
+            player1.moveForward()
+        if keys[pygame.K_DOWN]:
+            player1.moveBackword()
+        if keys[pygame.K_RIGHT]:
+            player1.turnRight()
+        if keys[pygame.K_LEFT]:
+            player1.turnLeft()
+        if keys[pygame.K_SPACE]:
+            print('force vector = ',player1.mov_force)
+            print('postion vector= ',player1.position)
+            print('angle between f and p = ',player1.mov_force.angle_to(player1.position))
+
+
+    #draw game
+    background.fill((0,0,0))
+    players.update()
+    players.draw(background)
+    enemys.draw(background)
+    pygame.display.flip()
+
+pygame.quit()
